@@ -1,0 +1,57 @@
+# imports
+import matplotlib.pyplot as plt
+import numpy as np
+import wave, sys
+
+# Function to show the sound waves
+def visualize(paths):
+    for path in paths:
+        try:
+            print(f"Processing: {path}")
+            # Reading the audio file
+            raw = wave.open(path, 'r')
+
+            # Check if the audio is mono or stereo
+            channels = raw.getnchannels()
+            if channels > 1:
+                print(f"Warning: {path} is stereo. Averaging channels to mono.")
+
+            # Reads all the frames
+            signal = raw.readframes(-1)
+            signal = np.frombuffer(signal, dtype="int16")
+
+            # Convert stereo to mono if needed
+            if channels == 2:
+                signal = signal[::2]  # Take every second sample to average channels
+
+            # Gets the frame rate
+            f_rate = raw.getframerate()
+
+            # Create a time vector spaced linearly with the size of the audio file
+            time = np.linspace(0, len(signal) / f_rate, num=len(signal))
+
+            # Plotting the waveform
+            plt.figure(figsize=(10, 5))
+            plt.title(f"Sound Wave: {path}")
+            plt.xlabel("Time (s)")
+            plt.ylabel("Amplitude")
+            plt.plot(time, signal)
+            plt.grid()  # Optional: Add grid for better visualization
+            plt.show()
+
+        except FileNotFoundError:
+            print(f"Error: File not found at path '{path}'")
+        except wave.Error as e:
+            print(f"Error: Cannot process the audio file '{path}'. Details: {e}")
+        except Exception as e:
+            print(f"Unexpected error with file '{path}': {e}")
+
+
+if __name__ == "__main__":
+    # Ensure command-line arguments are provided
+    if len(sys.argv) < 2:
+        print("Usage: python script.py <path_to_wav_file1> <path_to_wav_file2> ...")
+    else:
+        # Get all paths passed via command line
+        paths = sys.argv[1:]
+        visualize(['/content/file_example_WAV_10MG.wav', '/content/file_example_WAV_1MG.wav'])
